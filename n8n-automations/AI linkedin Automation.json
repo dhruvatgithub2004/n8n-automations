@@ -1,0 +1,304 @@
+{
+  "name": "AI linkedin Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "rssFeedUrl",
+              "value": "<__PLACEHOLDER_VALUE__Commodities and Forex news RSS feed URL__>",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "hashtags",
+              "value": "#Commodities #Forex #Trading #MarketAnalysis",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "046d66d9-3275-42dd-a94e-806ba443a9b5",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1712,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      },
+      "id": "c39e37de-3628-475d-ae34-d7697533d78f",
+      "name": "Daily Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        1488,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "person": "qzhDdIWpPr",
+        "text": "={{ $json.postContent }}",
+        "additionalFields": {}
+      },
+      "id": "f9829a68-4f8f-4042-9cae-29bbed6d6a43",
+      "name": "Post to LinkedIn",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        3248,
+        480
+      ],
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "Bc3zlAGaartUPB79",
+          "name": "LinkedIn account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=News Title: {{ $json.title }}\nNews Link: {{ $json.link }}\nHashtags: {{ $('Workflow Configuration').first().json.hashtags }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a social media content writer specialized in AI and Machine Learning.\nYour task is to generate a LinkedIn post for an audience interested in the latest AI research based on information from an AI research RSS feed tool.\n\nRequirements:\n\nDon’t start with “Based on the information provided…”\n\nAudience: Data Scientists , Business owners , Learners who are new to AI \n\nLength: 300–400 words\n\nStructure: 2–4 short engaging paragraphs\n\nTone: Professional, informative, and approachable\n\nTry to add numbers and named entities\n\nInclude 2–3 relevant hashtags\n\nEnd with a call-to-action (e.g., “Check it out here”, “Comment your thoughts”, “Learn more”)\n\nUse insights from recent AI research papers (e.g., AI Scientist-v2, Financial RAG with Agentic AI and Multi-HyDE) and trends from RSS feed summaries.\n\nYou are not supoosed to talk anything about forex , market and commodity, Its a Pure AI content\n\nGenerate one LinkedIn post that meets the above criteria."
+        }
+      },
+      "id": "c18c0863-436d-42ee-8a7e-4c2c15da97bb",
+      "name": "Content Regulator Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        2384,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Reads data from an RSS Feed ",
+        "url": "https://www.wired.com/feed/tag/ai/latest/rss",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedReadTool",
+      "typeVersion": 1.2,
+      "position": [
+        2544,
+        704
+      ],
+      "id": "1ed2573b-1a54-4e68-8f1b-b3def61d7843",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "url": "https://rss.arxiv.org/rss/cs.AI",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        1936,
+        480
+      ],
+      "id": "2d8a2a31-76be-4db5-8bbb-8697bb55aef7",
+      "name": "RSS Read1",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "id": "157e7606-5a40-47e9-b345-fa440f97ecbb",
+      "name": "Get Latest News Only",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        480
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst items = $input.all();\n\nconst cleanedItems = items.map((item) => {\n  const cleanedItem = {};\n  for (const key in item.json) {\n    // Remove * from the field value if it's a string\n    let value = item.json[key];\n    if (typeof value === \"string\") {\n      value = value.replace(/\\*/g, \"\"); // remove all *\n    }\n    cleanedItem[key] = value;\n  }\n  return { json: cleanedItem };\n});\n\nreturn cleanedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2736,
+        480
+      ],
+      "id": "7e11a856-f6b2-4945-bc85-dccf7e3592b8",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "={{ $json.output }}",
+        "options": {
+          "dalleQuality": "standard"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        2944,
+        480
+      ],
+      "id": "824c3a60-7de0-4f84-ae88-73999eadc73b",
+      "name": "Generate an image",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ul4YAKMXmW2IWfVX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        2336,
+        704
+      ],
+      "id": "6a2760ac-41a9-4b56-a868-13b19053ef6e",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "BtB3xcDuPqgLV2ug",
+          "name": "DeepSeek account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "RSS Read1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Schedule": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Regulator Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "ai_tool": [
+        [
+          {
+            "node": "Content Regulator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read1": {
+      "main": [
+        [
+          {
+            "node": "Get Latest News Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Latest News Only": {
+      "main": [
+        [
+          {
+            "node": "Content Regulator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Post to LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Content Regulator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "80ae3379-58fd-450b-a46b-a05c46b4f374",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8c0a74a086d6833f558258577ed155947b0f553e98f5c004ff25619d39c71af8"
+  },
+  "id": "2KroVu8lQ1mUkQhZ",
+  "tags": []
+}

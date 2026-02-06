@@ -1,0 +1,364 @@
+{
+  "name": "Technical Analyst Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "5474419963"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2352,
+        576
+      ],
+      "id": "d647cf3a-aea2-435b-9fc3-b502cb988bd5",
+      "name": "Window Buffer Memory"
+    },
+    {
+      "parameters": {
+        "name": "getChart",
+        "description": "Use this tool whenever the user requests analysis for a Forex pair , a Commodity or crypto currency.\n\nThis tool:\n- Fetches a TradingView chart for the requested Forex or Commodity\n- Generates a technical analysis based on the chart\n- Returns a chart image URL and its analysis\n\nMANDATORY USAGE RULE:\n- If the user asks for analysis of any Forex pair (e.g., EURUSD, GBPUSD, USDJPY) or Commodity (e.g., XAUUSD, XAGUSD, WTI, BRENT), you MUST call this tool before responding.\n\nOUTPUT REQUIREMENTS:\n- The chart image URL returned by this tool MUST be included in the final response.\n- The image MUST be rendered using Markdown format:\n  ![](IMAGE_URL)\n\nRESPONSE RULES AFTER TOOL CALL:\n- Base your response only on the analysis returned by this tool.\n- You may summarize or rephrase the analysis in clear, conversational language.\n- Do NOT add new technical indicators, price levels, or predictions.\n\nFAILURE CONDITIONS:\n- Responding without calling this tool when Forex or Commodity analysis is requested is incorrect.\n- Omitting the image markdown is incorrect.\n",
+        "workflowId": {
+          "__rl": true,
+          "value": "2ZJQUe1pkjl1bxjW",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2ZJQUe1pkjl1bxjW",
+          "cachedResultName": "Get Chart & Technical Analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        2528,
+        576
+      ],
+      "id": "fb57b886-15e9-4a0a-9ebf-eeeed39fb2cf",
+      "name": "Get Chart"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "=You are a Forex, Commodities and Crypto market analysis AI agent.\n\nIMPORTANT CAPABILITY UPDATE (HIGHEST PRIORITY):\n- The GetChart tool SUPPORTS Forex pairs ,Commodities and cryptocurrencies.\n- The GetChart tool DOES NOT support stocks or equities.\n- Any assumption that GetChart is stock-only is INCORRECT and MUST be ignored.\n\nMANDATORY TOOL USAGE:\n- If the user requests analysis for ANY Forex pair ,Commodity or cryptocurrency \n  (e.g., EURUSD, GBPUSD, USDJPY, XAUUSD, XAGUSD, WTI, BRENT):\n  → You MUST call the GetChart tool.\n\nSTRICT EXECUTION RULES:\n1. Do NOT refuse Forex , Commodity or cryptocurrency analysis.\n2. Do NOT mention tool limitations for Forex  Commodities or cryptocurrencies.\n3. Do NOT suggest ETFs or stock alternatives.\n4. Do NOT respond before calling GetChart.\n\nOUTPUT REQUIREMENTS:\n- The chart image URL returned by the tool.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        2288,
+        352
+      ],
+      "id": "bb187cde-4bfb-4c3a-84b7-3c8914bd507b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        2000,
+        352
+      ],
+      "id": "dee92020-5179-4eda-b552-e43621e1caa5",
+      "name": "Telegram Trigger",
+      "webhookId": "dbf7f0b7-5cdd-45a3-8c91-39f0665aba76",
+      "credentials": {
+        "telegramApi": {
+          "id": "c12Vrr66EjBixbRB",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## AI Agent\n",
+        "height": 520,
+        "width": 1556,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1952,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "e06c3d6a-beef-480e-9966-9e38bccd798a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2176,
+        576
+      ],
+      "id": "ad277fa9-497b-49ba-a33a-9735a45f1c2c",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ul4YAKMXmW2IWfVX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('Code in JavaScript').item.json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3104,
+        272
+      ],
+      "id": "8bee8d3c-a515-4e41-b944-b23e6f693c69",
+      "name": "Send a text message",
+      "webhookId": "e2393dea-83a4-44e1-b1d5-d6a85bebaf49",
+      "credentials": {
+        "telegramApi": {
+          "id": "o3wuIQgxgvXZFeHx",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Regex to match a clean URL (stops at whitespace or closing parenthesis)\nconst urlRegex = /(https?:\\/\\/[^\\s)]+)/;\n\nfor (const item of $input.all()) {\n  const text = item.json.output;\n  const match = text.match(urlRegex);\n  item.json.extractedUrl = match ? match[0] : null; // Only the URL\n}\n\nreturn $input.all();\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        352
+      ],
+      "id": "001ccadc-8f69-4484-aaba-4871cb4ecbed",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d582885b-f001-42ae-b16a-5d9b8785a371",
+              "leftValue": "={{ $json.extractedUrl }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c275cce6-ea0f-4eb7-a01b-6d83ddef9dae",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2848,
+        352
+      ],
+      "id": "8b9d3ff8-9963-47ad-97e3-f48c317ceb5d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "file": "={{ $('Code in JavaScript').item.json.extractedUrl }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3056,
+        448
+      ],
+      "id": "6ea9a172-05c8-48ac-bbea-92f6bd896988",
+      "name": "Send a photo message",
+      "webhookId": "a40d30d2-42b4-4bb6-959b-548694547d65",
+      "credentials": {
+        "telegramApi": {
+          "id": "o3wuIQgxgvXZFeHx",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('Code in JavaScript').item.json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3264,
+        448
+      ],
+      "id": "a3dabb11-adcd-41f4-8592-5b9a3737fc2e",
+      "name": "Send a text message1",
+      "webhookId": "28749d09-35d4-4b56-9d5c-cbc8f39a6b67",
+      "credentials": {
+        "telegramApi": {
+          "id": "o3wuIQgxgvXZFeHx",
+          "name": "Telegram account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Chart": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a photo message": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "31a5eff4-75e1-46cf-96eb-e3cd632b212d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8c0a74a086d6833f558258577ed155947b0f553e98f5c004ff25619d39c71af8"
+  },
+  "id": "fFan8w2ZtDCo6c6B",
+  "tags": []
+}

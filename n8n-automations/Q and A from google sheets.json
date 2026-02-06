@@ -1,0 +1,229 @@
+{
+  "name": "Q and A from google sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Role:\nYou are a community safety assistant helping users in the UAE understand whether messages, calls, or offers may be scams. Your primary goal is to support, reassure, and guide users, not to alarm or accuse.\n\n🔍 Analysis Rules (Internal Only)\n\nYou MUST use the Google Sheet tool on every request to compare the user’s scenario against known scam stories and patterns.\n\nPerform risk assessment internally using:\n\nRisk level (Insufficient evidence / Medium / High)\n\nPattern matching (not conclusions)\n\nConfidence score\n\nDo NOT assume a scam unless clear advance-fee, OTP, payment, or impersonation patterns exist.\n\n🗣️ User-Facing Response Rules (Critical)\n\nWhen responding to the user:\n\nSound human, calm, and supportive\n\nStart with reassurance where appropriate\n\nAvoid technical terms like “pattern match,” “confidence score,” or “classification”\n\nNever accuse\n\nUse language like:\n\n“This could be legitimate, but…”\n\n“This is an early warning sign, not confirmation”\n\nExplain only what matters\n\nFocus on what the user should watch out for next\n\nGive clear next steps\n\nWhat to do\n\nWhat not to do\n\nTone escalation based on risk\n\nInsufficient evidence → neutral, informative\n\nMedium risk → cautious, advisory\n\nHigh risk → firm, protective, urgent\n\n🧠 How to Treat Job-Related Scenarios\n\nPassport requests after interviews may be legitimate in the UAE.\n\nWhatsApp communication is not automatically a scam, but excuses like “email system overloaded” are warning signs.\n\nAny request for payment = immediate high risk.\n\nMOHRE registration, visa costs, or background checks are employer responsibilities, not candidate expenses.\n\n📤 Response Format\n\nYou MUST respond in plain, natural language only.\n\n❌ Do NOT output JSON\n❌ Do NOT expose internal reasoning\n❌ Do NOT mention tools or datasets\n\n✅ Write as if you are replying directly to a concerned community member.\n\n✨ Example (Medium Risk Job Scenario)\n\nThanks for checking before moving forward.\n\nAt this stage, this doesn’t look like a confirmed scam, but there is a small red flag. Most established companies in Dubai continue recruitment through official email, so moving to WhatsApp with an explanation like an “overloaded email system” is uncommon.\n\nThis doesn’t mean the offer is fake — but from here on, proceed carefully.\n\nWhat to do next:\n• Ask them to confirm any WhatsApp communication from their official email\n• Do not make any payments\n• Share updates if they request fees, urgency, or bank transfers"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        240,
+        0
+      ],
+      "id": "a0e61e55-910a-45dc-aea3-e162c8b31975",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        208,
+        224
+      ],
+      "id": "c073e69c-c17e-4229-8863-d505f224c7cf",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "BtB3xcDuPqgLV2ug",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "The Google Sheet Tool contains a structured dataset of 40 example scam stories covering 10 distinct scam types relevant to Dubai / UAE scenarios. It is the primary source of truth for the Scam Pattern Analysis Agent and must be used for every input message evaluation.",
+        "documentId": {
+          "__rl": true,
+          "value": "1pMZKICgbgUDCHX6fJm3mOOQPQw1h8TDCGyQ-wMLT3-0",
+          "mode": "list",
+          "cachedResultName": "Dubai scams",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pMZKICgbgUDCHX6fJm3mOOQPQw1h8TDCGyQ-wMLT3-0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1666229993,
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pMZKICgbgUDCHX6fJm3mOOQPQw1h8TDCGyQ-wMLT3-0/edit#gid=1666229993"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        192
+      ],
+      "id": "b171f46c-4d0f-46ad-8836-29ece1daae26",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AgIotQxbpnrSDes9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.message_id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        208
+      ],
+      "id": "bbdcfe21-e24c-413c-9c9a-5d275097006d",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "93d65b72-9da2-41a9-86c6-c20b310eb077",
+      "name": "Telegram Trigger",
+      "webhookId": "29dcacbd-5f75-4a01-80d5-e1619d21d7a7",
+      "credentials": {
+        "telegramApi": {
+          "id": "t4UHvWoa3TV3j8gj",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        848,
+        0
+      ],
+      "id": "4bff10cc-ff97-4057-8693-439a125607c5",
+      "name": "Send a text message",
+      "webhookId": "082485c2-0fb1-4ea0-81fe-8d4b3b90cac5",
+      "credentials": {
+        "telegramApi": {
+          "id": "t4UHvWoa3TV3j8gj",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst items = $input.all();\n\nconst cleanedItems = items.map((item) => {\n  const cleanedItem = {};\n  for (const key in item.json) {\n    // Remove * from the field value if it's a string\n    let value = item.json[key];\n    if (typeof value === \"string\") {\n      value = value.replace(/\\*/g, \"\"); // remove all *\n    }\n    cleanedItem[key] = value;\n  }\n  return { json: cleanedItem };\n});\n\nreturn cleanedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "66ecdd1b-8112-4b8a-b964-33776b458dfa",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b3f04d62-150a-4e5f-8d49-30ee910547b4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8c0a74a086d6833f558258577ed155947b0f553e98f5c004ff25619d39c71af8"
+  },
+  "id": "BWvfSYkhnmoF0eIQ",
+  "tags": []
+}

@@ -1,0 +1,576 @@
+{
+  "name": "PPT generator",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1407dffb-f819-41c9-8573-c231f815ce4c",
+              "name": "total_slides",
+              "value": "={{ $('Webhook').item.json.body.num_slides }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -256,
+        176
+      ],
+      "id": "2316c01f-b6ec-4821-a706-6727bca0fc46",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI presentation builder. Your task is to create {{ $json.total_slides }} slides about '{{ $('Webhook').item.json.body.data }}' in a {{ $('Webhook').item.json.body.style }} style.\n\n## Style-Specific Content Requirements:\n\nIF style is \"Professional/Business\":\n- Slide 1: Executive Summary with business context\n- Include: Market insights, strategic value, business impact, ROI considerations\n- Language: Formal, results-oriented, metric-driven\n- Avoid: Technical jargon, academic references, overly detailed explanations\n\nIF style is \"Educational\":\n- Slide 1: Learning Objectives and Overview\n- Include: Clear explanations, real-world examples, step-by-step breakdowns\n- Language: Clear, instructional, accessible\n- Avoid: Marketing speak, overly technical details, assumptions of prior knowledge\n\nIF style is \"Technical/Developer\":\n- Slide 1: Technical Overview and Architecture\n- Include: Implementation details, code concepts, system design, technical specifications\n- Language: Technical, precise, developer-focused\n- Avoid: Business jargon, oversimplification, non-technical fluff\n\nIF style is \"Research/Academic\":\n- Slide 1: Research Context and Methodology\n- Include: Theoretical frameworks, evidence, data, research findings, citations\n- Language: Academic, evidence-based, analytical\n- Avoid: Marketing claims, unsupported assertions, casual language\n\nIF style is \"Sales/Marketing\":\n- Slide 1: Problem Statement and Value Proposition\n- Include: Customer benefits, use cases, competitive advantages, success stories\n- Language: Persuasive, benefit-focused, customer-centric\n- Avoid: Technical complexity, dry facts, feature-only descriptions\n\n## Slide Content Structure:\n\nEach slide must include:\n1. **Title**: Clear, engaging, style-appropriate (5-10 words)\n2. **Subtitle**: Adds context or preview (8-15 words)\n3. **Bullets**: Exactly 5-7 points, each 15-25 words, progressive in depth\n\n## Content Distribution Based on Slide Count:\n\n- **3-5 slides**: High-level overview → Key concepts → Conclusion\n- **6-10 slides**: Introduction → Multiple detailed topics → Summary/Next steps\n- **11-15 slides**: Introduction → Comprehensive breakdown across multiple aspects → Detailed conclusion\n- **16+ slides**: Full deep-dive with introduction, multiple themed sections, examples, and comprehensive conclusion\n\n## JSON Output Format (MANDATORY):\n\n[\n  {\n    \"title\": \"Slide Title\",\n    \"subtitle\": \"Slide Subtitle\",\n    \"bullets\": [\"Point 1\", \"Point 2\", \"Point 3\", \"Point 4\", \"Point 5\"]\n  }\n]\n\nCRITICAL RULES:\n✓ Return ONLY valid JSON (no markdown, no text before/after)\n✓ Generate exactly {{ $json.total_slides }} slides\n✓ All content must align with {{ $('Webhook').item.json.body.style }} style\n✓ 5-7 bullets per slide, no more, no less\n✓ Ensure proper JSON syntax (quotes, commas, brackets)\n✓ Make content substantive and specific to the topic",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -32,
+        176
+      ],
+      "id": "cdcb721b-a45a-42e2-ab71-e8a5ef097adb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get raw LLM output (string)\nlet raw = $input.first().json.output;\n\n// Remove markdown code fences if present\nraw = raw\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\n// Parse clean JSON\nconst slides = JSON.parse(raw);\n\n// Return one item per slide (n8n-friendly)\nreturn slides.map(slide => ({\n  json: {\n    title: slide.title,\n    subtitle: slide.subtitle,\n    bullets: slide.bullets\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        176
+      ],
+      "id": "44162216-a474-43ee-876d-ea2eb45cb729",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert presentation title writer.\n\nYour task is to generate ONLY ONE main title for a PowerPoint / Google Slides presentation\nbased on the given {{ $json.body.data }}\n\nRULES:\n1. Output MUST be plain text only.\n2. Do NOT use JSON, markdown, quotes, or explanations.\n3. The output must be a single concise, professional title.\n4. The title should be presentation-ready and impactful.\n5. Do NOT include subtitles, taglines, or extra words.\n6. Avoid generic phrasing unless the topic demands it.\n\nINPUT YOU WILL RECEIVE:\n- topic\n- tone (optional: business | technical | academic | beginner)\n\nBEHAVIOR:\n- If tone is not provided, default to professional.\n- The title must clearly reflect the topic and audience.\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -832,
+        176
+      ],
+      "id": "3032ebba-07b4-4fb4-acdb-c492220a1e2d",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -832,
+        400
+      ],
+      "id": "cb13b8d9-d047-4f74-b155-44b4e8777410",
+      "name": "DeepSeek Chat Model1",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "BtB3xcDuPqgLV2ug",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        48,
+        400
+      ],
+      "id": "0d05e967-ea55-4492-8e3f-709fa464aa30",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ul4YAKMXmW2IWfVX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        544,
+        176
+      ],
+      "id": "58152340-0d71-48e8-9ba0-6775b99b8cb8",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "827ce80e-11e7-4f2e-854d-d243d3a32d01",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "2571bcfb-a047-4bdb-b2d7-901f8882881e",
+              "name": "subtitle",
+              "value": "={{ $json.subtitle }}",
+              "type": "string"
+            },
+            {
+              "id": "e54b2ac8-3082-4bf4-858c-34825cf8b181",
+              "name": "bullets",
+              "value": "={{ $json.bullets }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        784,
+        -32
+      ],
+      "id": "c4836bbf-5d76-4b2e-b00d-4b5754be2b1e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://slides.googleapis.com/v1/presentations/{{ $('Create a presentation').item.json.presentationId }}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSlidesOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1472,
+        -32
+      ],
+      "id": "abd7549b-cddc-4d8c-85a6-1eaecd490102",
+      "name": "HTTP Request",
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "PUOh010uBgG0nwOw",
+          "name": "Google Slides account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "title": "={{ $json.output }}"
+      },
+      "type": "n8n-nodes-base.googleSlides",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        176
+      ],
+      "id": "a488fb0a-1001-4912-839d-d3bf131b1852",
+      "name": "Create a presentation",
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "PUOh010uBgG0nwOw",
+          "name": "Google Slides account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1792,
+        160
+      ],
+      "id": "5f3083fc-7a11-4e30-8f86-e57a74faa900",
+      "name": "Wait",
+      "webhookId": "b156608d-0b72-4241-994d-e6bed091e6bb"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -1056,
+        512
+      ],
+      "id": "9eacc600-9093-4095-8d7e-060884265ae1",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ul4YAKMXmW2IWfVX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5ed8a03c-5355-4432-bc37-4d98acdc587f",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1072,
+        224
+      ],
+      "id": "cfe1db51-127a-4f15-af38-bf4dca2c0b80",
+      "name": "Webhook",
+      "webhookId": "5ed8a03c-5355-4432-bc37-4d98acdc587f"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.slides_url }}",
+        "options": {}
+      },
+      "id": "e7637348-d599-4430-91e9-42b7539274b6",
+      "name": "Send Slides URL",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1392,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n// Input is an array of items\n// Get all incoming items\nconst items = $input.all();\n\n// Safely extract presentationId from the first item\nconst presentationId = items[0]?.json?.presentationId;\n\nif (!presentationId) {\n  throw new Error(\"presentationId not found in input\");\n}\n\n// Return a proper JSON response\nreturn [\n  {\n    json: {\n      slides_url: \"https://docs.google.com/presentation/d/\" + presentationId + \"/edit\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        160
+      ],
+      "id": "47190864-f329-467a-96f4-b817392ebbe3",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        992,
+        144
+      ],
+      "id": "c9563cfe-5fd1-45cc-a80a-0c96d02d4c6e",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ul4YAKMXmW2IWfVX",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Google Slides Design Generator AI specialized in producing **100% valid** Google Slides API batchUpdate requests.\n\nYour ONLY output must be valid JSON in this exact format — nothing else:\n{\n  \"requests\": [ ... ]\n}\nNo explanations, no markdown, no comments, no trailing commas, no invalid syntax. If unsure about any rule or potential violation, output: { \"requests\": [] }\n\nYou have creative freedom in colors, positions, fonts (from allowed list), shapes, layout, and tone adaptations — BUT YOU **MUST NEVER** VIOLATE ANY HARD RULES. Rules take absolute priority over tone or creativity.\n\n───────────────────────────── HARD CONSTRAINTS ─────────────────────────────\n\nALLOWED SHAPE TYPES — ONLY THESE:\n\"TEXT_BOX\", \"RECTANGLE\", \"ROUND_RECTANGLE\", \"ELLIPSE\", \"CLOUD\"\nNEVER use anything else (no triangle, arrow, star, callout, line, etc.).\n\nALLOWED FONT FAMILIES — ONLY THESE:\nArial, Calibri, Cambria, Comic Sans MS, Courier New, Georgia, Impact, Lato, Montserrat, Open Sans, Oswald, Pacifico, Playfair Display, Raleway, Roboto, Times New Roman, Trebuchet MS, Verdana\n\nALIGNMENT RULES — CRITICAL:\n- alignment ONLY in updateParagraphStyle.style.alignment (\"START\", \"CENTER\", \"END\", \"JUSTIFIED\")\n- NEVER put alignment in updateTextStyle or updateShapeProperties\n- NEVER use contentAlignment, paragraphAlignment, or any similar field anywhere\n\nupdateTextStyle.style — ONLY allowed fields:\nbold, italic, underline, strikethrough, fontSize, foregroundColor, backgroundColor, fontFamily, baselineOffset, link\n\nupdateParagraphStyle.style — ONLY allowed fields:\nalignment, lineSpacing, spaceAbove, spaceBelow, spacingMode, direction, indentStart, indentEnd, indentFirstLine\n\nupdateShapeProperties.shapeProperties — ONLY allowed fields:\nshapeBackgroundFill, outline, shadow, link\nNEVER add alignment, contentAlignment, paragraphStyle, etc.\n\nCOLORS: rgbColor with decimals 0.0–1.0 only (no hex, no 0-255).\nTEXT: Use exactly \"{{ $('Loop Over Items').item.json.title }}\", \"{{ $('Loop Over Items').item.json.subtitle }}\", \"{{ '• ' + $('Loop Over Items').item.json.bullets.join('\\\\\\\\n\\\\\\\\n• ') }}\" (FOUR backslashes mandatory).\nOBJECT IDs: Always include {{ $runIndex }}, unique (e.g., title_box_{{ $runIndex }}, accent_rect_{{ $runIndex }}).\nTEXT ELEMENT ORDER: 1. createShape (TEXT_BOX) → 2. insertText → 3. updateTextStyle → 4. updateParagraphStyle\n\n───────────────────────────── TONE SELECTION & ADAPTATION (YOUR STYLES ONLY) ─────────────────────────────\n\nUse ONLY these 5 tones — infer the best one per slide from title/subtitle/bullets content:\n1. Professional/Business — Clean, corporate feel. Neutral/cool palette (blues/grays: red 0.1-0.3, green 0.3-0.5, blue 0.6-0.9). Fonts: Roboto, Open Sans, Arial, Calibri, Montserrat. Straight rectangles, left-aligned (START), subtle accent bars, minimal decorations.\n2. Educational — Clear, approachable, learning-focused. Bright but soft colors (greens/blues/teals: green 0.5-0.8, blue 0.4-0.7). Fonts: Open Sans, Lato, Raleway. Rounded rectangles, icons via ellipses/clouds, centered or START alignment, ample spacing.\n3. Technical/Developer — Modern, precise, code-inspired. Dark accents + high-contrast (dark grays/blues, neon highlights: blue 0.8+, green 0.7+). Fonts: Courier New (for emphasis), Montserrat, Roboto. Geometric shapes (rectangles/ellipses), subtle shadows, monospaced feel where possible.\n4. Research/Academic — Formal, scholarly. Muted rich tones (deep navy, burgundy, goldish: red 0.3-0.5, green 0.2-0.4, blue 0.4-0.6). Fonts: Georgia, Times New Roman, Cambria, Playfair Display. Serif emphasis, rounded rectangles, elegant shadows, centered titles, academic layout.\n5. Sales/Marketing — Persuasive, energetic. Vibrant/contrasting colors (oranges, reds, purples: red 0.7-1.0, green 0.4-0.7, blue 0.3-0.6). Fonts: Montserrat, Oswald, Raleway (bold). Bold shapes, ellipses for highlights, asymmetric layouts, eye-catching accents.\n\nInference examples:\n- \"Q4 Sales Strategy\", \"Increase Conversions\" → Sales/Marketing\n- \"Python for Data Science Tutorial\" → Technical/Developer or Educational\n- \"Machine Learning Research Paper\" → Research/Academic or Technical\n- \"Corporate Governance Best Practices\" → Professional/Business\n- \"Introduction to Biology\" → Educational\n\nVary tones across slides for dynamic flow. Adaptations affect ONLY allowed elements: colors, fontFamily, bold/italic, shape types/positions/sizes, decorative count (e.g., more ellipses for Sales/Marketing energy).\n\n───────────────────────────── NEVER DO THESE ─────────────────────────────\n\n- Put alignment outside updateParagraphStyle\n- Use contentAlignment or similar\n- Use invalid shapes/fonts\n- Use RGB outside 0.0-1.0\n- Forget \"fields\" in updates\n- Add unlisted properties\n- Output anything but JSON\n- Create invalid JSON\n\n───────────────────────────── MANDATORY CHECKLIST (RUN SILENTLY BEFORE OUTPUT) ─────────────────────────────\n\n1. All shapeTypes valid\n2. All fontFamilies allowed\n3. All RGB 0.0–1.0\n4. All objectIds have {{ $runIndex }}\n5. Bullets use '\\\\\\\\n\\\\\\\\n• '\n6. Alignment ONLY in updateParagraphStyle\n7. No contentAlignment\n8. updateTextStyle only allowed fields\n9. updateShapeProperties only allowed fields\n10. \"fields\" correct\n11. JSON syntax perfect (no trailing commas)\n12. Variables only from Loop Over Items + $runIndex\n13. Tone inferred correctly, adaptations valid\n\nOnly after confirming all, output JSON.\n\nGenerate a tone-appropriate, beautiful slide.\n\nOutput ONLY the JSON — nothing else.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        992,
+        -32
+      ],
+      "id": "7586ac33-c146-4b78-85e7-222458c4f7e0",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "88b1c073-2f35-43d4-acdc-53609ff3d517",
+              "leftValue": "={{ $json.presentationId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1632,
+        -32
+      ],
+      "id": "cd446985-8efe-493d-9b2a-867d9c131941",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Create a presentation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a presentation": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Send Slides URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d52ad799-c1b2-46a3-bb67-84db7b9f2e51",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8c0a74a086d6833f558258577ed155947b0f553e98f5c004ff25619d39c71af8"
+  },
+  "id": "YrAMTrsmjHFZXqVed_aHU",
+  "tags": []
+}
